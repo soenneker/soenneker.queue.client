@@ -42,9 +42,9 @@
 
         <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 
-        <PackageReference Include="Soenneker.Extensions.Configuration" Version="1.0.43" />
+        <PackageReference Include="Soenneker.Extensions.Configuration" Version="1.0.45" />
 
-        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="1.0.26" />
+        <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="1.0.27" />
 
         <PackageReference Include="Soenneker.Utils.SingletonDictionary" Version="1.0.33" />
     </ItemGroup>

@@ -46,6 +46,6 @@
 
         <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="1.0.69" />
 
-        <PackageReference Include="Soenneker.Utils.SingletonDictionary" Version="1.0.85" />
+        <PackageReference Include="Soenneker.Utils.SingletonDictionary" Version="1.0.87" />
     </ItemGroup>
 </Project>

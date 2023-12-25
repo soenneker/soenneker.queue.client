@@ -8,5 +8,5 @@
 ## Installation
 
 ```
-Install-Package Soenneker.Queue.Client
+dotnet add package Soenneker.Queue.Client
 ```

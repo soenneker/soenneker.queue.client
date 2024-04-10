@@ -1,13 +1,15 @@
 ﻿using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Azure.Core.Pipeline;
 using Azure.Storage.Queues;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Soenneker.Extensions.Configuration;
+using Soenneker.Extensions.String;
+using Soenneker.Extensions.Task;
+using Soenneker.Extensions.ValueTask;
 using Soenneker.Queue.Client.Abstract;
-using Soenneker.Utils.AsyncSingleton;
+using Soenneker.Utils.HttpClientCache.Abstract;
 using Soenneker.Utils.SingletonDictionary;
 
 namespace Soenneker.Queue.Client;
@@ -15,52 +17,38 @@ namespace Soenneker.Queue.Client;
 ///<inheritdoc cref="IQueueClientUtil"/>
 public class QueueClientUtil : IQueueClientUtil
 {
-    private readonly AsyncSingleton<HttpClient> _httpClient;
-
+    private readonly IHttpClientCache _httpClientCache;
     private readonly SingletonDictionary<QueueClient> _queueClients;
 
-    public QueueClientUtil(IConfiguration config, ILogger<QueueClientUtil> logger)
+    public QueueClientUtil(IConfiguration config, IHttpClientCache httpClientCache, ILogger<QueueClientUtil> logger)
     {
-        _httpClient = new AsyncSingleton<HttpClient>(() =>
+        _httpClientCache = httpClientCache;
+        _queueClients = new SingletonDictionary<QueueClient>( async args =>
         {
-            var socketsHandler = new SocketsHttpHandler
-            {
-                PooledConnectionLifetime = TimeSpan.FromMinutes(10),
-                MaxConnectionsPerServer = 20
-            };
+            var connectionString = config.GetValueStrict<string>("Azure:Storage:Queue:ConnectionString");
 
-            var httpClient = new HttpClient(socketsHandler);
-            httpClient.Timeout = TimeSpan.FromSeconds(30); // TODO: Research good timeout of queue client
-
-            return httpClient;
-        });
-
-        _queueClients = new SingletonDictionary<QueueClient>( async (args) =>
-        {
             var queueName = (string) args![0];
 
             var clientOptions = new QueueClientOptions
             {
-                Transport = new HttpClientTransport(await _httpClient.Get())
+                Transport = new HttpClientTransport(await _httpClientCache.Get(nameof(QueueClientUtil)).NoSync())
             };
-
-            var connectionString = config.GetValueStrict<string>("Azure:Storage:Queue:ConnectionString");
 
             var queueClient = new QueueClient(connectionString, queueName, clientOptions);
 
-            if (await queueClient.ExistsAsync())
+            if (await queueClient.ExistsAsync().NoSync())
                 return queueClient;
 
             logger.LogInformation("Queue did not exist, so creating: {queue}", queueName);
-            await queueClient.CreateAsync();
+            await queueClient.CreateAsync().NoSync();
 
             return queueClient;
         });
     }
 
-    public ValueTask<QueueClient> GetClient(string queue)
+    public ValueTask<QueueClient> Get(string queue)
     {
-        string queueLowered = queue.ToLowerInvariant();
+        string queueLowered = queue.ToLowerInvariantFast();
 
         return _queueClients.Get(queueLowered, queueLowered);
     }
@@ -69,15 +57,17 @@ public class QueueClientUtil : IQueueClientUtil
     {
         GC.SuppressFinalize(this);
 
-        await _queueClients.DisposeAsync();
+        await _httpClientCache.Remove(nameof(QueueClientUtil)).NoSync();
 
-        await _httpClient.DisposeAsync();
+        await _queueClients.DisposeAsync().NoSync();
     }
 
     public void Dispose()
     {
-        _queueClients.Dispose();
+        GC.SuppressFinalize(this);
 
-        _httpClient.Dispose();
+        _httpClientCache.RemoveSync(nameof(QueueClientUtil));
+
+        _queueClients.Dispose();
     }
 }

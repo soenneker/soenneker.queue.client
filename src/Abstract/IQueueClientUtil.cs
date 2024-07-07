@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
 
@@ -12,5 +13,5 @@ namespace Soenneker.Queue.Client.Abstract;
 public interface IQueueClientUtil : IDisposable, IAsyncDisposable
 {
     [Pure]
-    ValueTask<QueueClient> Get(string queue);
+    ValueTask<QueueClient> Get(string queue, CancellationToken cancellationToken = default);
 }

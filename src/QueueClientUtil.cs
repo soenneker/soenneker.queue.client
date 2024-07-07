@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core.Pipeline;
 using Azure.Storage.Queues;
@@ -23,34 +25,34 @@ public class QueueClientUtil : IQueueClientUtil
     public QueueClientUtil(IConfiguration config, IHttpClientCache httpClientCache, ILogger<QueueClientUtil> logger)
     {
         _httpClientCache = httpClientCache;
-        _queueClients = new SingletonDictionary<QueueClient>( async args =>
+        _queueClients = new SingletonDictionary<QueueClient>( async (queueName, token, _) =>
         {
             var connectionString = config.GetValueStrict<string>("Azure:Storage:Queue:ConnectionString");
 
-            var queueName = (string) args![0];
+            HttpClient httpClient = await _httpClientCache.Get(nameof(QueueClientUtil), cancellationToken: token).NoSync();
 
             var clientOptions = new QueueClientOptions
             {
-                Transport = new HttpClientTransport(await _httpClientCache.Get(nameof(QueueClientUtil)).NoSync())
+                Transport = new HttpClientTransport(httpClient)
             };
 
             var queueClient = new QueueClient(connectionString, queueName, clientOptions);
 
-            if (await queueClient.ExistsAsync().NoSync())
+            if (await queueClient.ExistsAsync(token).NoSync())
                 return queueClient;
 
             logger.LogInformation("Queue did not exist, so creating: {queue}", queueName);
-            await queueClient.CreateAsync().NoSync();
+            await queueClient.CreateAsync(cancellationToken: token).NoSync();
 
             return queueClient;
         });
     }
 
-    public ValueTask<QueueClient> Get(string queue)
+    public ValueTask<QueueClient> Get(string queue, CancellationToken cancellationToken = default)
     {
         string queueLowered = queue.ToLowerInvariantFast();
 
-        return _queueClients.Get(queueLowered, queueLowered);
+        return _queueClients.Get(queueLowered, cancellationToken, queueLowered);
     }
     
     public async ValueTask DisposeAsync()

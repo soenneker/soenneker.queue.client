@@ -39,7 +39,7 @@
         <PackageReference Include="Azure.Storage.Queues" Version="12.21.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
         <PackageReference Include="Soenneker.Extensions.Configuration" Version="3.0.569" />
-        <PackageReference Include="Soenneker.Extensions.Task" Version="3.0.78" />
+        <PackageReference Include="Soenneker.Extensions.Task" Version="3.0.79" />
         <PackageReference Include="Soenneker.Utils.AsyncSingleton" Version="3.0.513" />
         <PackageReference Include="Soenneker.Utils.HttpClientCache" Version="3.0.1164" />
     </ItemGroup>

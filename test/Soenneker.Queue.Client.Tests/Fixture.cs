@@ -2,8 +2,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Soenneker.Fixtures.Unit;
-using Soenneker.Queue.Client.Registrars;
 using Soenneker.Utils.Test;
+using Soenneker.Queue.Client.Registrars;
 
 namespace Soenneker.Queue.Client.Tests;
 
@@ -25,6 +25,7 @@ public class Fixture : UnitFixture
 
         IConfiguration config = TestUtil.BuildConfig();
         services.AddSingleton(config);
+
         services.AddQueueClientUtilAsScoped();
     }
 }

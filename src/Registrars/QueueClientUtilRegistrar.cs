@@ -13,15 +13,17 @@ public static class QueueClientUtilRegistrar
     /// <summary>
     /// Recommended
     /// </summary>
-    public static void AddQueueClientUtilAsSingleton(this IServiceCollection services)
+    public static IServiceCollection AddQueueClientUtilAsSingleton(this IServiceCollection services)
     {
-        services.AddHttpClientCache();
-        services.TryAddSingleton<IQueueClientUtil, QueueClientUtil>();
+        services.AddHttpClientCacheAsSingleton().TryAddSingleton<IQueueClientUtil, QueueClientUtil>();
+
+        return services;
     }
 
-    public static void AddQueueClientUtilAsScoped(this IServiceCollection services)
+    public static IServiceCollection AddQueueClientUtilAsScoped(this IServiceCollection services)
     {
-        services.AddHttpClientCache();
-        services.TryAddScoped<IQueueClientUtil, QueueClientUtil>();
+        services.AddHttpClientCacheAsSingleton().TryAddScoped<IQueueClientUtil, QueueClientUtil>();
+
+        return services;
     }
 }

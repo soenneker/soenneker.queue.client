@@ -17,7 +17,7 @@ using Soenneker.Utils.SingletonDictionary;
 namespace Soenneker.Queue.Client;
 
 ///<inheritdoc cref="IQueueClientUtil"/>
-public class QueueClientUtil : IQueueClientUtil
+public sealed class QueueClientUtil : IQueueClientUtil
 {
     private readonly IHttpClientCache _httpClientCache;
     private readonly SingletonDictionary<QueueClient> _queueClients;
@@ -57,8 +57,6 @@ public class QueueClientUtil : IQueueClientUtil
     
     public async ValueTask DisposeAsync()
     {
-        GC.SuppressFinalize(this);
-
         await _httpClientCache.Remove(nameof(QueueClientUtil)).NoSync();
 
         await _queueClients.DisposeAsync().NoSync();
@@ -66,8 +64,6 @@ public class QueueClientUtil : IQueueClientUtil
 
     public void Dispose()
     {
-        GC.SuppressFinalize(this);
-
         _httpClientCache.RemoveSync(nameof(QueueClientUtil));
 
         _queueClients.Dispose();

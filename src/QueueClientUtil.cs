@@ -25,7 +25,7 @@ public sealed class QueueClientUtil : IQueueClientUtil
     public QueueClientUtil(IConfiguration config, IHttpClientCache httpClientCache, ILogger<QueueClientUtil> logger)
     {
         _httpClientCache = httpClientCache;
-        _queueClients = new SingletonDictionary<QueueClient>( async (queueName, token, _) =>
+        _queueClients = new SingletonDictionary<QueueClient>( async (queueName, token) =>
         {
             var connectionString = config.GetValueStrict<string>("Azure:Storage:Queue:ConnectionString");
 
@@ -52,7 +52,7 @@ public sealed class QueueClientUtil : IQueueClientUtil
     {
         string queueLowered = queue.ToLowerInvariantFast();
 
-        return _queueClients.Get(queueLowered, cancellationToken, queueLowered);
+        return _queueClients.Get(queueLowered, cancellationToken);
     }
     
     public async ValueTask DisposeAsync()

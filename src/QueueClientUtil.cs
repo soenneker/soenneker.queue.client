@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core.Pipeline;
@@ -13,7 +12,7 @@ using Soenneker.Extensions.ValueTask;
 using Soenneker.Queue.Client.Abstract;
 using Soenneker.Utils.AsyncSingleton;
 using Soenneker.Utils.HttpClientCache.Abstract;
-using Soenneker.Utils.SingletonDictionary;
+using Soenneker.Dictionaries.Singletons;
 
 namespace Soenneker.Queue.Client;
 

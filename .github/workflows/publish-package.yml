@@ -31,39 +31,34 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Install dependencies with retry
-        run: |
-          retries=5
-          base_wait_time=15
-          exponent=2
+      - name: Restore tests
+        run: dotnet restore test/Soenneker.Queue.Client.Tests/Soenneker.Queue.Client.Tests.csproj --verbosity minimal
 
-          for i in $(seq 1 $retries); do
-            if dotnet restore; then
-              break
-            fi
-
-            if [ $i -lt $retries ]; then
-              wait_time=$(awk "BEGIN {print int($base_wait_time * ($exponent ^ ($i - 1)))}")
-              echo "dotnet restore failed, retrying in $wait_time seconds..."
-              sleep $wait_time
-            else
-              echo "dotnet restore failed after $retries retries."
-              exit 1
-            fi
-          done
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
+      - name: Build tests
+        run: dotnet build test/Soenneker.Queue.Client.Tests/Soenneker.Queue.Client.Tests.csproj --configuration Release --no-restore --verbosity minimal
 
       - name: Test
-        run: dotnet test test/Soenneker.Queue.Client.Tests/Soenneker.Queue.Client.Tests.csproj --no-restore --verbosity normal
+        run: dotnet test test/Soenneker.Queue.Client.Tests/Soenneker.Queue.Client.Tests.csproj --configuration Release --no-build --no-restore --verbosity normal
+
+      - name: Restore library
+        run: dotnet restore src/Soenneker.Queue.Client/Soenneker.Queue.Client.csproj --verbosity minimal
+
+      - name: Build library
+        run: dotnet build src/Soenneker.Queue.Client/Soenneker.Queue.Client.csproj --configuration Release --no-restore --verbosity minimal
 
       - name: Pack
-        run: dotnet pack --no-build --configuration Release --output .
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          dotnet pack src/Soenneker.Queue.Client/Soenneker.Queue.Client.csproj \
+            --configuration Release \
+            --no-build \
+            --no-restore \
+            --output ./artifacts
 
       - name: Publish to NuGet with retry
         run: |
-          nupkg_files=$(find . -name "*.nupkg")
+          nupkg_files=$(find ./artifacts -name "*.nupkg")
           retries=5
           base_wait_time=20 
           exponent=3.5
@@ -93,7 +88,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: |
-          dotnet nuget push ./*.nupkg \
+          dotnet nuget push ./artifacts/*.nupkg \
           --source "github" \
           --api-key ${{ secrets.GH__TOKEN }}
 

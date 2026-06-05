@@ -20,6 +20,11 @@ public static class QueueClientUtilRegistrar
         return services;
     }
 
+    /// <summary>
+    /// Adds queue client util as scoped.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The result of the operation.</returns>
     public static IServiceCollection AddQueueClientUtilAsScoped(this IServiceCollection services)
     {
         services.AddHttpClientCacheAsSingleton().TryAddScoped<IQueueClientUtil, QueueClientUtil>();

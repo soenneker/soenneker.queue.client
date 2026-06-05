@@ -84,6 +84,10 @@ public sealed class QueueClientUtil : IQueueClientUtil
         return _queueClients.Get(queueLowered, cancellationToken);
     }
 
+    /// <summary>
+    /// Asynchronously releases resources used by the current instance.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
         await _queueClients.DisposeAsync()
@@ -94,6 +98,9 @@ public sealed class QueueClientUtil : IQueueClientUtil
                               .NoSync();
     }
 
+    /// <summary>
+    /// Releases resources used by the current instance.
+    /// </summary>
     public void Dispose()
     {
         _queueClients.Dispose();

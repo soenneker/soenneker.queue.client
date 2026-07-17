@@ -41,6 +41,6 @@
     <ItemGroup>
         <PackageReference Include="Azure.Storage.Queues" Version="12.27.1" />
 <PackageReference Include="Soenneker.Extensions.Configuration" Version="4.0.845" />
-        <PackageReference Include="Soenneker.Utils.HttpClientCache" Version="4.0.1989" />
+        <PackageReference Include="Soenneker.Utils.HttpClientCache" Version="4.0.1990" />
     </ItemGroup>
 </Project>

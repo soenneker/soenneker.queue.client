@@ -13,11 +13,11 @@ namespace Soenneker.Queue.Client.Abstract;
 public interface IQueueClientUtil : IDisposable, IAsyncDisposable
 {
     /// <summary>
-    /// Gets the value.
+    /// Returns the configured queue Client used by the Queue Client.
     /// </summary>
-    /// <param name="queue">The queue.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A task containing the result of the operation.</returns>
+    /// <param name="queue">Queue for the get operation.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>A task whose result is the requested queue Client.</returns>
     [Pure]
     ValueTask<QueueClient> Get(string queue, CancellationToken cancellationToken = default);
 }

@@ -6,12 +6,12 @@ using Soenneker.Utils.HttpClientCache.Registrar;
 namespace Soenneker.Queue.Client.Registrars;
 
 /// <summary>
-/// A utility library for Azure Queue (Storage) client accessibility
+/// Registers Azure Queue Storage client caching services.
 /// </summary>
 public static class QueueClientUtilRegistrar
 {
     /// <summary>
-    /// Recommended
+    /// Registers one queue-client utility and queue-client cache for the application.
     /// </summary>
     /// <param name="services">Service collection that receives the registration.</param>
     /// <returns>The same service collection, so additional registrations can be chained.</returns>
@@ -23,7 +23,7 @@ public static class QueueClientUtilRegistrar
     }
 
     /// <summary>
-    /// Registers Queue Client Util with a scoped lifetime.
+    /// Registers one queue-client utility per dependency-injection scope while retaining the singleton HTTP transport cache.
     /// </summary>
     /// <param name="services">Service collection that receives the registration.</param>
     /// <returns>The same service collection, so additional registrations can be chained.</returns>

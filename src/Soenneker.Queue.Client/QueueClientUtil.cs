@@ -16,7 +16,6 @@ using Soenneker.Dictionaries.Singletons;
 
 namespace Soenneker.Queue.Client;
 
-/// <inheritdoc cref="IQueueClientUtil"/>
 public sealed class QueueClientUtil : IQueueClientUtil
 {
     private const string _httpClientKey = nameof(QueueClientUtil);
@@ -66,14 +65,11 @@ public sealed class QueueClientUtil : IQueueClientUtil
 
         var queueClient = new QueueClient(_connectionString, queueName, options);
 
-        if (await queueClient.ExistsAsync(token)
-                             .NoSync())
-            return queueClient;
+        var response = await queueClient.CreateIfNotExistsAsync(cancellationToken: token)
+                                        .NoSync();
 
-        _logger.LogInformation("Queue did not exist, so creating: {queue}", queueName);
-
-        await queueClient.CreateAsync(cancellationToken: token)
-                         .NoSync();
+        if (response is not null)
+            _logger.LogInformation("Created Azure Storage queue {Queue}", queueName);
 
         return queueClient;
     }
@@ -84,27 +80,17 @@ public sealed class QueueClientUtil : IQueueClientUtil
         return _queueClients.Get(queueLowered, cancellationToken);
     }
 
-    /// <summary>
-    /// Asynchronously releases resources used by the current instance.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
         await _queueClients.DisposeAsync()
                            .NoSync();
         await _queueClientOptions.DisposeAsync()
                                  .NoSync();
-        await _httpClientCache.Remove(_httpClientKey)
-                              .NoSync();
     }
 
-    /// <summary>
-    /// Releases resources used by the current instance.
-    /// </summary>
     public void Dispose()
     {
         _queueClients.Dispose();
         _queueClientOptions.Dispose();
-        _httpClientCache.RemoveSync(_httpClientKey);
     }
 }

@@ -1,11 +1,12 @@
 [![](https://img.shields.io/nuget/v/Soenneker.Queue.Client.svg?style=for-the-badge)](https://www.nuget.org/packages/Soenneker.Queue.Client/)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.queue.client/publish-package.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.queue.client/actions/workflows/publish-package.yml)
+[![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.queue.client/build-and-test.yml?label=Build&style=for-the-badge)](https://github.com/soenneker/soenneker.queue.client/actions/workflows/build-and-test.yml)
 [![](https://img.shields.io/nuget/dt/Soenneker.Queue.Client.svg?style=for-the-badge)](https://www.nuget.org/packages/Soenneker.Queue.Client/)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.queue.client/codeql.yml?label=CodeQL&style=for-the-badge)](https://github.com/soenneker/soenneker.queue.client/actions/workflows/codeql.yml)
 
 # Soenneker.Queue.Client
 
-A utility library for Azure Queue (Storage) client accessibility Singleton IoC recommended.
+Provides cached Azure Queue Storage `QueueClient` instances through dependency injection and creates a requested queue when it does not exist.
 
 ## Install
 
@@ -13,32 +14,56 @@ A utility library for Azure Queue (Storage) client accessibility Singleton IoC r
 dotnet add package Soenneker.Queue.Client
 ```
 
-## Quick start
+## Configuration
+
+```json
+{
+  "Azure": {
+    "Storage": {
+      "Queue": {
+        "ConnectionString": "<Azure Storage connection string>"
+      }
+    }
+  }
+}
+```
+
+The connection string is read when `QueueClientUtil` is constructed. The credential must be allowed to inspect and create queues in addition to performing the application’s queue operations.
+
+## Registration
 
 ```csharp
 using Soenneker.Queue.Client.Registrars;
-using Microsoft.Extensions.DependencyInjection;
 
-var services = new ServiceCollection();
-var result = services.AddQueueClientUtilAsSingleton();
+builder.Services.AddQueueClientUtilAsSingleton();
 ```
 
-Recommended.
+Singleton registration shares the per-queue client cache across the application. Scoped registration is also available:
 
-## What you get
+```csharp
+builder.Services.AddQueueClientUtilAsScoped();
+```
 
-- `IQueueClientUtil` — A utility library for Azure Queue (Storage) client accessibility Singleton IoC recommended.
-- `QueueClientUtilRegistrar` — A utility library for Azure Queue (Storage) client accessibility.
+With scoped registration, each scope owns its queue-client lookup cache, while the underlying cached HTTP transport remains singleton-owned and survives disposal of individual scopes.
 
-## API at a glance
+Both registration methods use `TryAdd`; an existing `IQueueClientUtil` registration is preserved.
 
-| API | What it does | Result / important behavior |
-| --- | --- | --- |
-| `QueueClientUtilRegistrar.AddQueueClientUtilAsSingleton(services)` | Recommended. | The same service collection, so additional registrations can be chained. |
-| `QueueClientUtilRegistrar.AddQueueClientUtilAsScoped(services)` | Registers Queue Client Util with a scoped lifetime. | The same service collection, so additional registrations can be chained. |
+## Usage
 
-## Practical notes
+```csharp
+using Azure.Storage.Queues;
+using Soenneker.Queue.Client.Abstract;
 
-- Reuse the registered client instead of constructing one per operation.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+public sealed class WorkPublisher(IQueueClientUtil queueClients)
+{
+    public async ValueTask Publish(string json, CancellationToken cancellationToken)
+    {
+        QueueClient queue = await queueClients.Get("work-items", cancellationToken);
+        await queue.SendMessageAsync(json, cancellationToken);
+    }
+}
+```
+
+`Get` normalizes the queue name to lowercase, creates the queue if necessary, and caches the resulting `QueueClient` for the lifetime of the utility. Azure Queue Storage naming rules still apply.
+
+Disposing a scoped utility releases its own cached queue objects but does not evict the shared HTTP client. The DI container owns and disposes the singleton HTTP cache at application shutdown.

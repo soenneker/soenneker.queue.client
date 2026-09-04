@@ -16,6 +16,7 @@ using Soenneker.Dictionaries.Singletons;
 
 namespace Soenneker.Queue.Client;
 
+/// <inheritdoc cref="IQueueClientUtil" />
 public sealed class QueueClientUtil : IQueueClientUtil
 {
     private const string _httpClientKey = nameof(QueueClientUtil);

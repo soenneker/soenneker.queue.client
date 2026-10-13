@@ -37,7 +37,7 @@ public sealed class QueueClientUtil : IQueueClientUtil
         _httpClientCache = httpClientCache;
 
         // Sync lookup once (and avoids repeating config reads per queue)
-        _connectionString = config.GetValueStrict<string>("Azure:Storage:Queue:ConnectionString");
+        _connectionString = config.GetStringStrict("Azure:Storage:Queue:ConnectionString");
 
         // No closure: method group
         _queueClientOptions = new AsyncSingleton<QueueClientOptions>(CreateQueueClientOptions);
